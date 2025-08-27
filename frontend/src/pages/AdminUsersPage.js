@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(['idan']);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('adminToken');
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/users', {
+      const res = await fetch('http://localhost:5000/api/users', {
         headers: { 'x-admin-token': token },
       });
 
@@ -32,10 +32,6 @@ const AdminUsersPage = () => {
       <h2 className="text-2xl font-semibold mb-6">👥 Daftar Pengguna</h2>
 
       {loading ? (
-        <p className="text-center py-8 text-gray-500">Memuat...</p>
-      ) : users.length === 0 ? (
-        <p className="text-center py-8 text-gray-500">Belum ada pengguna.</p>
-      ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -67,7 +63,9 @@ const AdminUsersPage = () => {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>        
+      )  : (
+        <p className="text-center py-8 text-gray-500">Memuat...</p>
       )}
     </div>
   );

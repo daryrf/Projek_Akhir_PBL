@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 
 const AdminMessagesPage = () => {
   const [messages, setMessages] = useState([]);
@@ -10,7 +10,7 @@ const AdminMessagesPage = () => {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/messages', {
+      const res = await fetch('http://localhost:5000/api/messages', {
         headers: {
           'x-admin-token': token,
           'Content-Type': 'application/json',
@@ -52,26 +52,12 @@ const AdminMessagesPage = () => {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (token === 'admin123') {
-      fetchMessages();
-    } else {
-      window.location.href = '/login'; // Jaga-jaga
-    }
-  }, []);
-
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
       <h2 className="text-2xl font-semibold mb-6">📬 Daftar Pesan</h2>
 
       {loading ? (
-        <p className="text-center py-8 text-gray-500">Memuat...</p>
-      ) : error ? (
-        <div className="py-8 text-center text-red-600">{error}</div>
-      ) : messages.length === 0 ? (
-        <p className="text-center py-8 text-gray-500">Belum ada pesan.</p>
-      ) : (
+        
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -107,6 +93,8 @@ const AdminMessagesPage = () => {
             </tbody>
           </table>
         </div>
+      )  : (
+        <p className="text-center py-8 text-gray-500">Memuat...</p>
       )}
     </div>
   );

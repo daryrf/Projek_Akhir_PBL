@@ -1,3 +1,4 @@
+// backend/routes/adminRoutes.js
 const express = require('express');
 const Message = require('../models/Message');
 const router = express.Router();
@@ -13,10 +14,8 @@ router.get('/messages', isAuthenticated, async (req, res) => {
     const messages = await Message.findAll({
       order: [['createdAt', 'DESC']],
     });
-    console.log('📤 Mengirim data:', messages);
-    res.json(messages); 
+    res.json(messages);
   } catch (err) {
-    console.error('❌ Error:', err);
     res.status(500).json({ message: 'Gagal ambil data' });
   }
 });

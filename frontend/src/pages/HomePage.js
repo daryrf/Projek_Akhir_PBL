@@ -1,4 +1,3 @@
-// src/pages/HomePage.js
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -6,11 +5,10 @@ const HomePage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  // 🔐 Cek status login dan role
+  // 🔐 Cek apakah user sudah login
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   const isLoggedIn = !!user;
 
-  // Fungsi untuk menutup menu mobile
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
@@ -25,7 +23,7 @@ const HomePage = () => {
           CREATIVE
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Nav */}
         <nav className="hidden md:flex gap-8">
           {[
             { name: 'Home', path: '/' },
@@ -52,9 +50,9 @@ const HomePage = () => {
           })}
         </nav>
 
-        {/* Tombol Aksi: Login / Dashboard + Get Started */}
+        {/* Tombol Aksi */}
         <div className="flex items-center gap-4">
-          {/* Login / Dashboard / Admin Button */}
+          {/* 🔁 Ganti "Login" jadi "Dashboard" atau "Admin" setelah login */}
           {isLoggedIn ? (
             <Link
               to={user.role === 'admin' ? '/admin' : '/dashboard'}
@@ -71,7 +69,6 @@ const HomePage = () => {
             </Link>
           )}
 
-          {/* Tombol Get Started */}
           <Link
             to="/contact"
             className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all transform hover:-translate-y-0.5"
@@ -84,43 +81,9 @@ const HomePage = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-b border-gray-200 p-5 space-y-4 shadow-lg">
-          <Link
-            to="/"
-            className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-            onClick={closeMenu}
-          >
-            Home
-          </Link>
-          <Link
-            to="/services"
-            className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-            onClick={closeMenu}
-          >
-            Services
-          </Link>
-          <Link
-            to="/portfolio"
-            className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-            onClick={closeMenu}
-          >
-            Portfolio
-          </Link>
-          <Link
-            to="/about"
-            className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-            onClick={closeMenu}
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-            onClick={closeMenu}
-          >
-            Contact
-          </Link>
+          {/* ... (menu lainnya) ... */}
 
-          {/* Login / Dashboard / Admin di Mobile */}
+          {/* 🔁 Sama seperti di desktop */}
           {isLoggedIn ? (
             <Link
               to={user.role === 'admin' ? '/admin' : '/dashboard'}
@@ -139,7 +102,6 @@ const HomePage = () => {
             </Link>
           )}
 
-          {/* Tombol Get Started di Mobile */}
           <Link
             to="/contact"
             className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all text-center"

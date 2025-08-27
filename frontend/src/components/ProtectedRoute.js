@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children, requiredRole = 'admin' }) => {
 
   // Cek role
   if (requiredRole === 'admin' && parsedUser.role !== 'admin') {
-    return <Navigate to="/" />; // Atau ke halaman khusus user
+    return <Navigate to="/" />;
   }
 
   return children;
