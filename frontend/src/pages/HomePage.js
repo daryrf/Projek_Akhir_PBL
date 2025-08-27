@@ -1,26 +1,23 @@
 // src/pages/HomePage.js
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const HomePage = () => {
-  const [data, setData] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  useEffect(() => {
-    axios.get('http://localhost:5000/api/hello')
-      .then(res => setData(res.data.message))
-      .catch(err => console.error(err));
-  }, []);
+  // 🔐 Cek status login dan role
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const isLoggedIn = !!user;
 
-  // Fungsi untuk menutup menu mobile setelah klik
+  // Fungsi untuk menutup menu mobile
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <div>
+    <>
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-6 bg-white shadow-md">
+        {/* Logo */}
         <Link
           to="/"
           className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent"
@@ -28,6 +25,7 @@ const HomePage = () => {
           CREATIVE
         </Link>
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex gap-8">
           {[
             { name: 'Home', path: '/' },
@@ -54,12 +52,33 @@ const HomePage = () => {
           })}
         </nav>
 
-        <Link
-          to="/contact"
-          className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all transform hover:-translate-y-0.5"
-        >
-          Get Started
-        </Link>
+        {/* Tombol Aksi: Login / Dashboard + Get Started */}
+        <div className="flex items-center gap-4">
+          {/* Login / Dashboard / Admin Button */}
+          {isLoggedIn ? (
+            <Link
+              to={user.role === 'admin' ? '/admin' : '/dashboard'}
+              className="px-4 py-2 text-indigo-600 font-medium hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+            >
+              {user.role === 'admin' ? 'Admin' : 'Dashboard'}
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-2 text-gray-700 font-medium hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+            >
+              Login
+            </Link>
+          )}
+
+          {/* Tombol Get Started */}
+          <Link
+            to="/contact"
+            className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+          >
+            Get Started
+          </Link>
+        </div>
       </header>
 
       {/* Mobile Menu */}
@@ -101,6 +120,26 @@ const HomePage = () => {
             Contact
           </Link>
 
+          {/* Login / Dashboard / Admin di Mobile */}
+          {isLoggedIn ? (
+            <Link
+              to={user.role === 'admin' ? '/admin' : '/dashboard'}
+              className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
+              onClick={closeMenu}
+            >
+              {user.role === 'admin' ? 'Admin' : 'Dashboard'}
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
+              onClick={closeMenu}
+            >
+              Login
+            </Link>
+          )}
+
+          {/* Tombol Get Started di Mobile */}
           <Link
             to="/contact"
             className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all text-center"
@@ -361,14 +400,7 @@ const HomePage = () => {
           <p>&copy; 2025 Creative Agency. All rights reserved. | <Link to="/privacy" className="hover:text-white">Privacy Policy</Link> | <Link to="/terms" className="hover:text-white">Terms of Service</Link></p>
         </div>
       </footer>
-
-      {/* Backend Data Display */}
-      {data && (
-        <div className="text-center py-4 text-lg text-indigo-600 font-medium">
-          {data}
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
