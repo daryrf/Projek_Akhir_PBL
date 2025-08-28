@@ -10,6 +10,7 @@ import ServicesPage from './pages/ServicesPage';
 import LoginPage from './pages/LoginPage'; // ✅ Sekarang hanya untuk admin login
 import AdminMessagesPage from './pages/AdminMessagesPage';
 import AdminServicesPage from './pages/AdminServicesPage';
+import AdminPortfolioPage from './pages/AdminPortfolioPage';
 
 // Layout & Proteksi
 import AdminLayout from './pages/AdminLayout';
@@ -62,6 +63,17 @@ function App() {
               <ProtectedRoute>
                 <AdminLayout onLogout={handleLogout}>
                   <AdminServicesPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/portfolio"
+            element={
+              <ProtectedRoute>
+                <AdminLayout onLogout={handleLogout}>
+                  <AdminPortfolioPage />
                 </AdminLayout>
               </ProtectedRoute>
             }

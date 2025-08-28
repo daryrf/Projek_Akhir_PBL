@@ -1,155 +1,213 @@
-// src/pages/PortfolioPage.js
-import React, { useState } from 'react';
+// frontend/src/PortfolioPage.js
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const PortfolioPage = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [modal, setModal] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const location = useLocation();
-  
 
-  // Data Proyek
-  const projects = [
-    {
-      id: 'project1',
-      title: 'Grand Luxury Hotel',
-      category: 'web branding',
-      mainCategory: 'Web Design',
-      image: 'Luxury Hotel Website',
-      description: 'Complete website redesign for a 5-star luxury hotel chain with booking system integration and multilingual support.',
-      tags: ['WordPress', 'Booking System', 'Responsive'],
-      duration: '8 weeks',
-      team: '4 team members',
-    },
-    {
-      id: 'project2',
-      title: 'FitTracker Pro',
-      category: 'mobile ui-ux',
-      mainCategory: 'Mobile App',
-      image: 'Fitness Tracking App',
-      description: 'iOS and Android fitness app with social features, workout plans, and progress tracking with wearable device integration.',
-      tags: ['React Native', 'HealthKit', 'Analytics'],
-      duration: '12 weeks',
-      team: '6 team members',
-    },
-    {
-      id: 'project3',
-      title: 'StyleHub Online Store',
-      category: 'ecommerce web',
-      mainCategory: 'E-commerce',
-      image: 'Fashion E-commerce',
-      description: 'Premium fashion e-commerce platform with AI-powered recommendations and advanced inventory management system.',
-      tags: ['Shopify Plus', 'AI Recommendations', 'Payment Gateway'],
-      duration: '10 weeks',
-      team: '5 team members',
-    },
-    {
-      id: 'project4',
-      title: 'InnovateAI Brand Identity',
-      category: 'branding ui-ux',
-      mainCategory: 'Branding',
-      image: 'Tech Startup Branding',
-      description: 'Complete brand identity package for AI startup including logo design, brand guidelines, and marketing materials.',
-      tags: ['Logo Design', 'Brand Guidelines', 'Print Materials'],
-      duration: '6 weeks',
-      team: '3 team members',
-    },
-    {
-      id: 'project5',
-      title: 'DataAnalytics Dashboard',
-      category: 'web ui-ux',
-      mainCategory: 'UI/UX Design',
-      image: 'SaaS Dashboard',
-      description: 'Complex data visualization dashboard for enterprise SaaS platform with real-time analytics and reporting features.',
-      tags: ['React', 'D3.js', 'Real-time Data'],
-      duration: '14 weeks',
-      team: '7 team members',
-    },
-    {
-      id: 'project6',
-      title: 'QuickBite Delivery',
-      category: 'mobile ecommerce',
-      mainCategory: 'Mobile App',
-      image: 'Food Delivery App',
-      description: 'On-demand food delivery application with real-time tracking, payment integration, and restaurant management system.',
-      tags: ['Flutter', 'GPS Tracking', 'Payment Gateway'],
-      duration: '16 weeks',
-      team: '8 team members',
-    },
-  ];
+  // Fetch projects from backend
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('http://localhost:5000/api/portfolio'); // Public endpoint
 
-  // Data Detail Modal
-  const projectData = {
-    project1: {
-      title: "Grand Luxury Hotel",
-      image: "Luxury Hotel Website Design",
-      description: "We redesigned the complete digital experience for Grand Luxury Hotel, a prestigious 5-star hotel chain. The project involved creating a sophisticated booking system, implementing multilingual support for international guests, and developing a content management system that allows hotel staff to easily update room availability, pricing, and promotional content. The design emphasizes elegance and luxury while maintaining excellent usability across all devices.",
-      features: ["Advanced booking system with real-time availability", "Multilingual support (English, Indonesian, Chinese, Japanese)", "Mobile-responsive design", "Integration with property management system", "SEO optimization for better search rankings"],
-      client: "Grand Luxury Hotels",
-      duration: "8 weeks",
-      team: "4 members",
-      tech: "WordPress, PHP, MySQL, JavaScript",
-      status: "Completed & Live"
-    },
-    project2: {
-      title: "FitTracker Pro",
-      image: "Fitness Mobile App Interface",
-      description: "FitTracker Pro is a comprehensive fitness application that combines workout tracking, nutrition monitoring, and social features. The app integrates with popular wearable devices and provides personalized workout recommendations based on user fitness levels and goals. We developed both iOS and Android versions using React Native to ensure consistent user experience across platforms.",
-      features: ["Wearable device integration (Apple Watch, Fitbit)", "Social challenges and leaderboards", "Personalized workout plans", "Nutrition tracking with barcode scanner", "Progress analytics and reporting"],
-      client: "FitTech Solutions",
-      duration: "12 weeks",
-      team: "6 members",
-      tech: "React Native, Node.js, MongoDB",
-      status: "Completed & Live"
-    },
-    project3: {
-      title: "StyleHub Online Store",
-      image: "E-commerce Platform Dashboard",
-      description: "StyleHub is a premium fashion e-commerce platform that required a complete overhaul of the user experience, checkout flow, and back-end inventory management. We implemented AI-powered product recommendations and a seamless payment gateway integration to increase conversion rates by 40%.",
-      features: ["AI-powered product recommendations", "One-click checkout", "Inventory sync across warehouses", "Customer loyalty program", "Advanced search with filters"],
-      client: "StyleHub Inc.",
-      duration: "10 weeks",
-      team: "5 members",
-      tech: "Shopify Plus, React, Stripe API",
-      status: "Launched"
-    },
-    project4: {
-      title: "InnovateAI Brand Identity",
-      image: "Brand Identity Presentation",
-      description: "InnovateAI is a cutting-edge AI startup that needed a strong visual identity to stand out in a competitive market. We created a modern, tech-forward brand that communicates innovation, trust, and intelligence through color, typography, and visual elements.",
-      features: ["Complete brand guidelines", "Logo variations for digital and print", "Business card and stationery design", "Social media templates", "Email signature design"],
-      client: "InnovateAI",
-      duration: "6 weeks",
-      team: "3 members",
-      tech: "Adobe Illustrator, InDesign",
-      status: "Completed"
-    },
-    project5: {
-      title: "DataAnalytics Dashboard",
-      image: "Dashboard Analytics Preview",
-      description: "An enterprise-grade analytics dashboard that visualizes complex data sets in real-time. The interface was designed for usability, with customizable widgets, drill-down capabilities, and export functionality. Built with performance and scalability in mind.",
-      features: ["Real-time data streaming", "Customizable dashboards", "Export to PDF/CSV", "Role-based access control", "Alerts and notifications"],
-      client: "DataCorp",
-      duration: "14 weeks",
-      team: "7 members",
-      tech: "React, D3.js, WebSocket, Node.js",
-      status: "In Production"
-    },
-    project6: {
-      title: "QuickBite Delivery",
-      image: "Food Delivery App Screens",
-      description: "A full-stack food delivery application connecting users with local restaurants. Features include real-time order tracking, GPS-based delivery routing, and a restaurant portal for order management. Built for scalability and speed.",
-      features: ["Live GPS tracking", "In-app payments", "Push notifications", "Restaurant management dashboard", "Rating and review system"],
-      client: "QuickBite",
-      duration: "16 weeks",
-      team: "8 members",
-      tech: "Flutter, Firebase, Google Maps API",
-      status: "Live on App Store & Play Store"
-    }
-  };
+        if (res.ok) {
+          const data = await res.json();
+          // Filter only active projects if you have isActive field
+          setProjects(data.filter(project => project.isActive !== false));
+        } else {
+          throw new Error('Gagal mengambil data portfolio');
+        }
+      } catch (err) {
+        console.error('Error fetching portfolio:', err);
+        setError(err.message);
 
-  const openModal = (id) => {
-    setModal(projectData[id]);
+        // Fallback data (jika backend belum ready)
+        setProjects([
+          {
+            id: 'project1',
+            title: 'Grand Luxury Hotel',
+            category: 'web branding',
+            mainCategory: 'Web Design',
+            image: 'Luxury Hotel Website',
+            description: 'Complete website redesign for a 5-star luxury hotel chain with booking system integration and multilingual support.',
+            tags: ['WordPress', 'Booking System', 'Responsive'],
+            duration: '8 weeks',
+            team: '4 team members',
+            details: {
+              client: 'Grand Luxury Hotels',
+              duration: '8 weeks',
+              team: '4 members',
+              tech: 'WordPress, PHP, MySQL, JavaScript',
+              status: 'Completed & Live',
+              features: [
+                'Advanced booking system with real-time availability',
+                'Multilingual support (English, Indonesian, Chinese, Japanese)',
+                'Mobile-responsive design',
+                'Integration with property management system',
+                'SEO optimization for better search rankings'
+              ]
+            },
+            isActive: true
+          },
+          {
+            id: 'project2',
+            title: 'FitTracker Pro',
+            category: 'mobile ui-ux',
+            mainCategory: 'Mobile App',
+            image: 'Fitness Tracking App',
+            description: 'iOS and Android fitness app with social features, workout plans, and progress tracking with wearable device integration.',
+            tags: ['React Native', 'HealthKit', 'Analytics'],
+            duration: '12 weeks',
+            team: '6 team members',
+            details: {
+              client: 'FitTech Solutions',
+              duration: '12 weeks',
+              team: '6 members',
+              tech: 'React Native, Node.js, MongoDB',
+              status: 'Completed & Live',
+              features: [
+                'Wearable device integration (Apple Watch, Fitbit)',
+                'Social challenges and leaderboards',
+                'Personalized workout plans',
+                'Nutrition tracking with barcode scanner',
+                'Progress analytics and reporting'
+              ]
+            },
+            isActive: true
+          },
+          {
+            id: 'project3',
+            title: 'StyleHub Online Store',
+            category: 'ecommerce web',
+            mainCategory: 'E-commerce',
+            image: 'Fashion E-commerce',
+            description: 'Premium fashion e-commerce platform with AI-powered recommendations and advanced inventory management system.',
+            tags: ['Shopify Plus', 'AI Recommendations', 'Payment Gateway'],
+            duration: '10 weeks',
+            team: '5 team members',
+            details: {
+              client: 'StyleHub Inc.',
+              duration: '10 weeks',
+              team: '5 members',
+              tech: 'Shopify Plus, React, Stripe API',
+              status: 'Launched',
+              features: [
+                'AI-powered product recommendations',
+                'One-click checkout',
+                'Inventory sync across warehouses',
+                'Customer loyalty program',
+                'Advanced search with filters'
+              ]
+            },
+            isActive: true
+          },
+          {
+            id: 'project4',
+            title: 'InnovateAI Brand Identity',
+            category: 'branding ui-ux',
+            mainCategory: 'Branding',
+            image: 'Tech Startup Branding',
+            description: 'Complete brand identity package for AI startup including logo design, brand guidelines, and marketing materials.',
+            tags: ['Logo Design', 'Brand Guidelines', 'Print Materials'],
+            duration: '6 weeks',
+            team: '3 team members',
+            details: {
+              client: 'InnovateAI',
+              duration: '6 weeks',
+              team: '3 members',
+              tech: 'Adobe Illustrator, InDesign',
+              status: 'Completed',
+              features: [
+                'Complete brand guidelines',
+                'Logo variations for digital and print',
+                'Business card and stationery design',
+                'Social media templates',
+                'Email signature design'
+              ]
+            },
+            isActive: true
+          },
+          {
+            id: 'project5',
+            title: 'DataAnalytics Dashboard',
+            category: 'web ui-ux',
+            mainCategory: 'UI/UX Design',
+            image: 'SaaS Dashboard',
+            description: 'Complex data visualization dashboard for enterprise SaaS platform with real-time analytics and reporting features.',
+            tags: ['React', 'D3.js', 'Real-time Data'],
+            duration: '14 weeks',
+            team: '7 team members',
+            details: {
+              client: 'DataCorp',
+              duration: '14 weeks',
+              team: '7 members',
+              tech: 'React, D3.js, WebSocket, Node.js',
+              status: 'In Production',
+              features: [
+                'Real-time data streaming',
+                'Customizable dashboards',
+                'Export to PDF/CSV',
+                'Role-based access control',
+                'Alerts and notifications'
+              ]
+            },
+            isActive: true
+          },
+          {
+            id: 'project6',
+            title: 'QuickBite Delivery',
+            category: 'mobile ecommerce',
+            mainCategory: 'Mobile App',
+            image: 'Food Delivery App',
+            description: 'On-demand food delivery application with real-time tracking, payment integration, and restaurant management system.',
+            tags: ['Flutter', 'GPS Tracking', 'Payment Gateway'],
+            duration: '16 weeks',
+            team: '8 team members',
+            details: {
+              client: 'QuickBite',
+              duration: '16 weeks',
+              team: '8 members',
+              tech: 'Flutter, Firebase, Google Maps API',
+              status: 'Live on App Store & Play Store',
+              features: [
+                'Live GPS tracking',
+                'In-app payments',
+                'Push notifications',
+                'Restaurant management dashboard',
+                'Rating and review system'
+              ]
+            },
+            isActive: true
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const openModal = (project) => {
+    // Ubah: langsung gunakan project dan details-nya
+    setModal({
+      title: project.title,
+      image: project.image,
+      description: project.description,
+      features: project.details?.features || [],
+      client: project.details?.client || 'N/A',
+      duration: project.details?.duration || project.duration,
+      team: project.details?.team || project.team,
+      tech: project.details?.tech || 'N/A',
+      status: project.details?.status || 'N/A'
+    });
   };
 
   const closeModal = () => {
@@ -249,53 +307,76 @@ const PortfolioPage = () => {
 
       {/* Portfolio Grid */}
       <section className="py-16 px-6 bg-white">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
-          {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
-            >
-              <div className="relative h-60 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 font-medium">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    onClick={() => openModal(project.id)}
-                    className="px-5 py-2.5 bg-white text-indigo-600 font-bold rounded-full shadow-md transform translate-y-10 hover:translate-y-0 transition-transform"
-                  >
-                    View Project
-                  </button>
-                </div>
-                <span className="relative z-10">{project.image}</span>
-              </div>
-              <div className="p-6">
-                <span className="inline-block px-4 py-1 text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-3">
-                  {project.mainCategory}
-                </span>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">{project.title}</h3>
-                <p className="text-gray-600 text-sm mb-4 leading-relaxed">{project.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <span className="ml-4 text-gray-600">Loading portfolio...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-red-500 mb-4">⚠️ Error loading portfolio</div>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <p className="text-sm text-gray-500">Showing default projects instead</p>
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Projects Found</h3>
+            <p className="text-gray-600">
+              {activeFilter === 'all'
+                ? 'No portfolio items are currently available.'
+                : `No projects found in ${activeFilter} category.`}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+            {filteredProjects.map((project) => (
+              <div
+                key={project.id}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+              >
+                <div className="relative h-60 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 font-medium">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => openModal(project)}
+                      className="px-5 py-2.5 bg-white text-indigo-600 font-bold rounded-full shadow-md transform translate-y-10 hover:translate-y-0 transition-transform"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-5 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <span>⏱️</span>
-                    <span>{project.duration}</span>
+                      View Project
+                    </button>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span>👥</span>
-                    <span>{project.team}</span>
+                  <span className="relative z-10">{project.image}</span>
+                </div>
+                <div className="p-6">
+                  <span className="inline-block px-4 py-1 text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-3">
+                    {project.mainCategory}
+                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{project.title}</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">{project.description}</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.tags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-5 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <span>⏱️</span>
+                      <span>{project.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span>👥</span>
+                      <span>{project.team}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* CTA Section */}

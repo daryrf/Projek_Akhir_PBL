@@ -9,6 +9,7 @@ const AdminSidebar = () => {
     { name: 'Dashboard', path: '/admin', icon: '📊' },
     { name: 'Kelola Pesan', path: '/admin/messages', icon: '💬' },
     { name: 'Kelola Services', path: '/admin/services', icon: '🛠️' },
+    { name: 'Kelola Portfolio', path: '/admin/portfolio', icon: '📃' },
   ];
 
   return (
