@@ -5,10 +5,6 @@ const HomePage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  // 🔐 Cek apakah user sudah login
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  const isLoggedIn = !!user;
-
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
@@ -50,25 +46,8 @@ const HomePage = () => {
           })}
         </nav>
 
-        {/* Tombol Aksi */}
-        <div className="flex items-center gap-4">
-          {/* 🔁 Ganti "Login" jadi "Dashboard" atau "Admin" setelah login */}
-          {isLoggedIn ? (
-            <Link
-              to={user.role === 'admin' ? '/admin' : '/dashboard'}
-              className="px-4 py-2 text-indigo-600 font-medium hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-            >
-              {user.role === 'admin' ? 'Admin' : 'Dashboard'}
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              className="px-4 py-2 text-gray-700 font-medium hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-            >
-              Login
-            </Link>
-          )}
-
+        {/* ✅ Simplified Action Button - Only "Get Started" */}
+        <div className="flex items-center">
           <Link
             to="/contact"
             className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all transform hover:-translate-y-0.5"
@@ -76,39 +55,66 @@ const HomePage = () => {
             Get Started
           </Link>
         </div>
+
+        {/* Mobile Menu Toggle */}
+        <button
+          className="md:hidden p-2 text-gray-700 hover:text-indigo-600 transition-colors"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+            />
+          </svg>
+        </button>
       </header>
 
-      {/* Mobile Menu */}
+      {/* ✅ Mobile Menu - Simplified */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 p-5 space-y-4 shadow-lg">
-          {/* ... (menu lainnya) ... */}
+        <div className="md:hidden fixed top-20 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40">
+          <div className="p-5 space-y-4">
+            {/* Navigation Links */}
+            {[
+              { name: 'Home', path: '/' },
+              { name: 'Services', path: '/services' },
+              { name: 'Portfolio', path: '/portfolio' },
+              { name: 'About', path: '/about' },
+              { name: 'Contact', path: '/contact' },
+            ].map(({ name, path }) => {
+              const isActive = location.pathname === path;
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`block px-4 py-2.5 rounded-lg transition-all ${
+                    isActive 
+                      ? 'bg-indigo-100 text-indigo-600 font-medium' 
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                  }`}
+                  onClick={closeMenu}
+                >
+                  {name}
+                </Link>
+              );
+            })}
 
-          {/* 🔁 Sama seperti di desktop */}
-          {isLoggedIn ? (
+            {/* Get Started Button */}
             <Link
-              to={user.role === 'admin' ? '/admin' : '/dashboard'}
-              className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
+              to="/contact"
+              className="block w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all text-center mt-4"
               onClick={closeMenu}
             >
-              {user.role === 'admin' ? 'Admin' : 'Dashboard'}
+              Get Started
             </Link>
-          ) : (
-            <Link
-              to="/login"
-              className="block px-4 py-2.5 bg-gray-100 border border-dashed border-gray-400 rounded-md text-sm font-medium hover:bg-gray-200"
-              onClick={closeMenu}
-            >
-              Login
-            </Link>
-          )}
-
-          <Link
-            to="/contact"
-            className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all text-center"
-            onClick={closeMenu}
-          >
-            Get Started
-          </Link>
+          </div>
         </div>
       )}
 
@@ -295,9 +301,9 @@ const HomePage = () => {
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-8">Let's Start a Conversation</h3>
               {[
-                { icon: '📧', label: 'Email', info: 'hello@creativeagency.com' },
+                { icon: '📧', label: 'Email', info: 'Ders@creativeagency.com' },
                 { icon: '📱', label: 'Phone', info: '+62 812 3456 7890' },
-                { icon: '📍', label: 'Address', info: 'Jl. Creative Street No. 123\nBandung, West Java, Indonesia' },
+                { icon: '📍', label: 'Address', info: 'Jl. Washington No. 123\nBandung, West Java, Indonesia' },
                 { icon: '🕒', label: 'Business Hours', info: 'Mon - Fri: 9:00 AM - 6:00 PM\nSat: 9:00 AM - 2:00 PM' }
               ].map((item, i) => (
                 <div
@@ -322,7 +328,7 @@ const HomePage = () => {
       <footer className="bg-gray-800 text-white py-12 px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-left max-w-6xl mx-auto">
           <div>
-            <h4 className="text-xl font-semibold mb-4">Creative Agency</h4>
+            <h4 className="text-xl font-semibold mb-4">D'Creative Agency</h4>
             <p className="text-gray-300 text-sm leading-relaxed">
               Transforming ideas into extraordinary digital experiences that inspire and engage.
             </p>
@@ -359,7 +365,7 @@ const HomePage = () => {
           </div>
         </div>
         <div className="border-t border-gray-700 mt-10 pt-6 text-center text-gray-400 text-sm">
-          <p>&copy; 2025 Creative Agency. All rights reserved. | <Link to="/privacy" className="hover:text-white">Privacy Policy</Link> | <Link to="/terms" className="hover:text-white">Terms of Service</Link></p>
+          <p>&copy; 2025 D'Creative Agency. All rights reserved. | <Link to="/privacy" className="hover:text-white">Privacy Policy</Link> | <Link to="/terms" className="hover:text-white">Terms of Service</Link></p>
         </div>
       </footer>
     </>

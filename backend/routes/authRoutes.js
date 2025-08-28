@@ -35,7 +35,7 @@ router.post('/login', async (req, res) => {
     // Nanti ganti pakai bcrypt
     if (user.password !== password) {
       return res.status(401).json({ message: 'Email atau password salah' });
-    }
+    }2
 
     // ✅ Kirim role ke frontend
     res.json({

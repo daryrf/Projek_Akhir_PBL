@@ -1,5 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Komponen Modal yang benar-benar terpisah
+const Modal = React.memo(({ show, onClose, title, children }) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-xl"
+          >
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+});
+
+// Komponen Form terpisah untuk Add
+const AddForm = React.memo(({ formData, onSubmit, onClose, onChange }) => {
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Nama
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={onChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={onChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Pesan
+        </label>
+        <textarea
+          name="message"
+          value={formData.message}
+          onChange={onChange}
+          required
+          rows="4"
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Tambah
+        </button>
+      </div>
+    </form>
+  );
+});
+
+// Komponen Form terpisah untuk Edit
+const EditForm = React.memo(({ formData, onSubmit, onClose, onChange }) => {
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Nama
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={onChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={onChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Pesan
+        </label>
+        <textarea
+          name="message"
+          value={formData.message}
+          onChange={onChange}
+          required
+          rows="4"
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Update
+        </button>
+      </div>
+    </form>
+  );
+});
 
 const AdminMessagesPage = () => {
   const [messages, setMessages] = useState([]);
@@ -8,7 +154,12 @@ const AdminMessagesPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(null);
-  const [formData, setFormData] = useState({
+  const [addFormData, setAddFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
     message: ''
@@ -16,7 +167,7 @@ const AdminMessagesPage = () => {
   const navigate = useNavigate();
 
   // Fungsi untuk mengambil data messages
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -59,14 +210,14 @@ const AdminMessagesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // useEffect untuk memanggil fetchMessages saat komponen dimount
   useEffect(() => {
     fetchMessages();
-  }, []);
+  }, [fetchMessages]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     if (!window.confirm('Yakin hapus pesan ini?')) return;
 
     try {
@@ -84,7 +235,7 @@ const AdminMessagesPage = () => {
       }
 
       if (res.ok) {
-        setMessages(messages.filter(m => m.id !== id));
+        setMessages(prev => prev.filter(m => m.id !== id));
         alert('Pesan berhasil dihapus');
       } else {
         const result = await res.json().catch(() => ({ message: 'Gagal hapus pesan' }));
@@ -94,74 +245,69 @@ const AdminMessagesPage = () => {
       console.error('Delete error:', err);
       alert('Gagal terhubung ke server');
     }
-  };
+  }, []);
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     fetchMessages();
-  };
+  }, [fetchMessages]);
 
-  // Modal Component
-  const Modal = ({ show, onClose, title, children }) => {
-    if (!show) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg w-full max-w-md mx-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <button 
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl"
-            >
-              ×
-            </button>
-          </div>
-          {children}
-        </div>
-      </div>
-    );
-  };
-
-  const handleAdd = () => {
-    setFormData({
+  const handleAdd = useCallback(() => {
+    setAddFormData({
       name: '',
       email: '',
       message: ''
     });
-    setCurrentMessage(null);
     setShowAddModal(true);
-  };
+  }, []);
 
-  const handleEdit = (message) => {
-    setFormData({
-      name: message.name,
-      email: message.email,
-      message: message.message
+  const handleEdit = useCallback((message) => {
+    setEditFormData({
+      name: message.name || '',
+      email: message.email || '',
+      message: message.message || ''
     });
     setCurrentMessage(message);
     setShowEditModal(true);
-  };
+  }, []);
 
-  const handleCloseModals = () => {
+  const handleCloseAddModal = useCallback(() => {
     setShowAddModal(false);
-    setShowEditModal(false);
-    setCurrentMessage(null);
-    setFormData({
+    setAddFormData({
       name: '',
       email: '',
       message: ''
     });
-  };
+  }, []);
 
-  const handleFormChange = (e) => {
+  const handleCloseEditModal = useCallback(() => {
+    setShowEditModal(false);
+    setEditFormData({
+      name: '',
+      email: '',
+      message: ''
+    });
+    setCurrentMessage(null);
+  }, []);
+
+  // Handler untuk Add Form
+  const handleAddFormChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setAddFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
 
-  const handleSubmitAdd = async (e) => {
+  // Handler untuk Edit Form
+  const handleEditFormChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, []);
+
+  const handleSubmitAdd = useCallback(async (e) => {
     e.preventDefault();
     
     try {
@@ -171,13 +317,13 @@ const AdminMessagesPage = () => {
           'x-admin-token': 'admin123',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(addFormData)
       });
 
       if (res.ok) {
         const newMessage = await res.json();
-        setMessages([newMessage, ...messages]); // Tambah di awal array
-        handleCloseModals();
+        setMessages(prev => [newMessage, ...prev]);
+        handleCloseAddModal();
         alert('Pesan berhasil ditambahkan');
         fetchMessages(); // Refresh data
       } else {
@@ -188,9 +334,9 @@ const AdminMessagesPage = () => {
       console.error('Add error:', err);
       alert('Gagal terhubung ke server');
     }
-  };
+  }, [addFormData, handleCloseAddModal, fetchMessages]);
 
-  const handleSubmitEdit = async (e) => {
+  const handleSubmitEdit = useCallback(async (e) => {
     e.preventDefault();
     
     try {
@@ -200,15 +346,15 @@ const AdminMessagesPage = () => {
           'x-admin-token': 'admin123',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(editFormData)
       });
 
       if (res.ok) {
         const updatedMessage = await res.json();
-        setMessages(messages.map(msg => 
+        setMessages(prev => prev.map(msg => 
           msg.id === currentMessage.id ? updatedMessage : msg
         ));
-        handleCloseModals();
+        handleCloseEditModal();
         alert('Pesan berhasil diupdate');
       } else {
         const result = await res.json().catch(() => ({ message: 'Gagal update pesan' }));
@@ -218,7 +364,37 @@ const AdminMessagesPage = () => {
       console.error('Update error:', err);
       alert('Gagal terhubung ke server');
     }
-  };
+  }, [editFormData, currentMessage, handleCloseEditModal]);
+
+  // Memoize table rows untuk mencegah re-render yang tidak perlu
+  const tableRows = useMemo(() => {
+    return messages.map((msg) => (
+      <tr key={msg.id} className="border-b hover:bg-gray-50">
+        <td className="py-3 font-medium">{msg.name}</td>
+        <td>{msg.email}</td>
+        <td className="max-w-xs truncate" title={msg.message}>
+          {msg.message}
+        </td>
+        <td className="text-sm text-gray-600">
+          {new Date(msg.createdAt).toLocaleString('id-ID')}
+        </td>
+        <td>
+          <button
+            onClick={() => handleEdit(msg)}
+            className="text-blue-600 hover:underline text-sm mr-3"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(msg.id)}
+            className="text-red-600 hover:underline text-sm"
+          >
+            Hapus
+          </button>
+        </td>
+      </tr>
+    ));
+  }, [messages, handleEdit, handleDelete]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
@@ -259,32 +435,7 @@ const AdminMessagesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {messages.map((msg) => (
-                <tr key={msg.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 font-medium">{msg.name}</td>
-                  <td>{msg.email}</td>
-                  <td className="max-w-xs truncate" title={msg.message}>
-                    {msg.message}
-                  </td>
-                  <td className="text-sm text-gray-600">
-                    {new Date(msg.createdAt).toLocaleString('id-ID')}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleEdit(msg)}
-                      className="text-blue-600 hover:underline text-sm mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(msg.id)}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {tableRows}
             </tbody>
           </table>
         </div>
@@ -293,129 +444,29 @@ const AdminMessagesPage = () => {
       {/* Add Modal */}
       <Modal 
         show={showAddModal} 
-        onClose={handleCloseModals}
+        onClose={handleCloseAddModal}
         title="Tambah Pesan Baru"
       >
-        <form onSubmit={handleSubmitAdd}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleFormChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleFormChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pesan
-            </label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleFormChange}
-              required
-              rows="4"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={handleCloseModals}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              Tambah
-            </button>
-          </div>
-        </form>
+        <AddForm
+          formData={addFormData}
+          onSubmit={handleSubmitAdd}
+          onClose={handleCloseAddModal}
+          onChange={handleAddFormChange}
+        />
       </Modal>
 
       {/* Edit Modal */}
       <Modal 
         show={showEditModal} 
-        onClose={handleCloseModals}
+        onClose={handleCloseEditModal}
         title="Edit Pesan"
       >
-        <form onSubmit={handleSubmitEdit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleFormChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleFormChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pesan
-            </label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleFormChange}
-              required
-              rows="4"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={handleCloseModals}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Update
-            </button>
-          </div>
-        </form>
+        <EditForm
+          formData={editFormData}
+          onSubmit={handleSubmitEdit}
+          onClose={handleCloseEditModal}
+          onChange={handleEditFormChange}
+        />
       </Modal>
     </div>
   );

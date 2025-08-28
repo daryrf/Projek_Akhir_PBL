@@ -23,7 +23,10 @@ const User = sequelize.define('User', {
   },
   role: {
     type: DataTypes.STRING,
-    defaultValue: 'user', // 'admin', 'user'
+    defaultValue: 'admin', // ✅ Hanya admin yang bisa login
+    validate: {
+      isIn: [['admin']], // ✅ Hanya terima role admin
+    }
   },
 }, {
   tableName: 'users',

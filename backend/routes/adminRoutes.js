@@ -1,14 +1,81 @@
 // backend/routes/adminRoutes.js
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const Message = require('../models/Message');
-const User = require('../models/User'); // Tambahkan model User
+const User = require('../models/User');
+const Service = require('../models/Service');
+const { Op } = require('sequelize');
 const router = express.Router();
 
-const isAuthenticated = (req, res, next) => {
-  const auth = req.headers['x-admin-token'];
-  if (auth === 'admin123') next();
-  else res.status(401).json({ message: 'Akses ditolak' });
+// ✅ MIDDLEWARE AUTHENTICATION dengan JWT
+const isAuthenticated = async (req, res, next) => {
+  try {
+    // Ambil token dari header Authorization atau x-admin-token
+    const token = req.headers.authorization?.replace('Bearer ', '') || 
+                 req.headers['x-admin-token'] ||
+                 req.headers['authorization']?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Token tidak ditemukan. Silakan login.' });
+    }
+    
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Cari user berdasarkan decoded token
+    const user = await User.findByPk(decoded.id);
+    
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang diizinkan.' });
+    }
+    
+    // Attach user to request object
+    req.user = user;
+    next();
+    
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Token tidak valid' });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token sudah expired. Silakan login ulang.' });
+    }
+    
+    return res.status(500).json({ message: 'Error validasi token' });
+  }
 };
+
+// =================== ADMIN DASHBOARD ===================
+router.get('/dashboard', isAuthenticated, async (req, res) => {
+  try {
+    // Get statistics for dashboard
+    const totalMessages = await Message.count();
+    const totalServices = await Service.count();
+    const activeServices = await Service.count({ where: { isActive: true } });
+    
+    res.json({
+      stats: {
+        totalMessages,
+        totalServices,
+        activeServices,
+        inactiveServices: totalServices - activeServices
+      },
+      user: {
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+    
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({ message: 'Gagal ambil data dashboard' });
+  }
+});
 
 // =================== MESSAGES ROUTES ===================
 router.get('/messages', isAuthenticated, async (req, res) => {
@@ -19,7 +86,7 @@ router.get('/messages', isAuthenticated, async (req, res) => {
     res.json(messages);
   } catch (err) {
     console.error('Get messages error:', err);
-    res.status(500).json({ message: 'Gagal ambil data' });
+    res.status(500).json({ message: 'Gagal ambil data pesan' });
   }
 });
 
@@ -36,7 +103,6 @@ router.delete('/messages/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-// POST - Tambah pesan baru
 router.post('/messages', isAuthenticated, async (req, res) => {
   try {
     const { name, email, message } = req.body;
@@ -48,7 +114,6 @@ router.post('/messages', isAuthenticated, async (req, res) => {
   }
 });
 
-// PUT - Update pesan
 router.put('/messages/:id', isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;
@@ -65,69 +130,83 @@ router.put('/messages/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-// =================== USERS ROUTES ===================
-
-// GET - Ambil semua users
-router.get('/users', isAuthenticated, async (req, res) => {
+// =================== SERVICES ROUTES ===================
+router.get('/services', isAuthenticated, async (req, res) => {
   try {
-    const users = await User.findAll({
+    console.log('Admin: Getting all services...');
+    
+    const services = await Service.findAll({
       order: [['createdAt', 'DESC']],
-      attributes: { exclude: ['password'] }, // Jangan kirim password
     });
-    res.json(users);
+    
+    console.log('Admin: Services found:', services.length);
+    res.json(services);
   } catch (err) {
-    console.error('Get users error:', err);
-    res.status(500).json({ message: 'Gagal ambil data users' });
+    console.error('Admin get services error:', err);
+    res.status(500).json({ 
+      message: 'Gagal ambil data services', 
+      error: err.message 
+    });
   }
 });
 
-// GET - Ambil user berdasarkan ID
-router.get('/users/:id', isAuthenticated, async (req, res) => {
+router.get('/services/:id', isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByPk(id, {
-      attributes: { exclude: ['password'] }, // Jangan kirim password
-    });
+    const service = await Service.findByPk(id);
     
-    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
+    if (!service) return res.status(404).json({ message: 'Service tidak ditemukan' });
     
-    res.json(user);
+    res.json(service);
   } catch (err) {
-    console.error('Get user by ID error:', err);
-    res.status(500).json({ message: 'Gagal ambil data user' });
+    console.error('Admin get service by ID error:', err);
+    res.status(500).json({ message: 'Gagal ambil data service' });
   }
 });
 
-// POST - Tambah user baru
-router.post('/users', isAuthenticated, async (req, res) => {
+router.post('/services', isAuthenticated, async (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body;
+    console.log('Admin: Creating service with data:', req.body);
     
-    // Validasi input
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Nama, email, dan password wajib diisi' });
+    const { 
+      title, 
+      description, 
+      icon = '🛠️', 
+      category, 
+      price = 0, 
+      duration = 1, 
+      color = 'from-gray-400 to-gray-600', 
+      isActive = true 
+    } = req.body;
+    
+    if (!title || !description) {
+      return res.status(400).json({ message: 'Judul dan deskripsi wajib diisi' });
     }
-
-    // Cek apakah email sudah ada
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email sudah terdaftar' });
-    }
-
-    // Buat user baru
-    const newUser = await User.create({ 
-      name, 
-      email, 
-      password, // Pastikan password di-hash di model atau middleware
-      role 
+    
+    const existingService = await Service.findOne({ 
+      where: { title: title.trim() } 
     });
-
-    // Response tanpa password menggunakan method toSafeJSON
-    res.json(newUser.toSafeJSON());
-  } catch (err) {
-    console.error('Create user error:', err);
     
-    // Handle Sequelize validation errors
+    if (existingService) {
+      return res.status(400).json({ message: 'Judul layanan sudah ada' });
+    }
+    
+    const newService = await Service.create({
+      title: title.trim(),
+      description: description.trim(),
+      icon,
+      category,
+      price: parseInt(price) || 0,
+      duration: parseInt(duration) || 1,
+      color,
+      isActive: Boolean(isActive)
+    });
+    
+    console.log('Admin: Service created:', newService.toJSON());
+    res.status(201).json(newService);
+  } catch (err) {
+    console.error('Admin create service error:', err);
+    
     if (err.name === 'SequelizeValidationError') {
       return res.status(400).json({ 
         message: 'Data tidak valid', 
@@ -135,44 +214,49 @@ router.post('/users', isAuthenticated, async (req, res) => {
       });
     }
     
-    res.status(500).json({ message: 'Gagal tambah user' });
+    res.status(500).json({ message: 'Gagal tambah service', error: err.message });
   }
 });
 
-// PUT - Update user
-router.put('/users/:id', isAuthenticated, async (req, res) => {
+router.put('/services/:id', isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role } = req.body;
+    const { title, description, icon, category, price, duration, color, isActive } = req.body;
     
-    const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
+    console.log('Admin: Updating service ID:', id, 'with data:', req.body);
     
-    // Cek apakah email baru sudah digunakan user lain
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ 
+    const service = await Service.findByPk(id);
+    if (!service) return res.status(404).json({ message: 'Service tidak ditemukan' });
+    
+    if (title && title.trim() !== service.title) {
+      const existingService = await Service.findOne({ 
         where: { 
-          email,
-          id: { [require('sequelize').Op.ne]: id } // Exclude current user
+          title: title.trim(),
+          id: { [Op.ne]: id }
         } 
       });
       
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email sudah digunakan user lain' });
+      if (existingService) {
+        return res.status(400).json({ message: 'Judul layanan sudah digunakan service lain' });
       }
     }
     
-    // Update user (tidak termasuk password untuk keamanan)
-    await user.update({ 
-      ...(name && { name }),
-      ...(email && { email }),
-      ...(role && { role })
-    });
+    const updateData = {};
+    if (title !== undefined && title.trim()) updateData.title = title.trim();
+    if (description !== undefined && description.trim()) updateData.description = description.trim();
+    if (icon !== undefined) updateData.icon = icon;
+    if (category !== undefined) updateData.category = category;
+    if (price !== undefined) updateData.price = parseInt(price) || 0;
+    if (duration !== undefined) updateData.duration = parseInt(duration) || 1;
+    if (color !== undefined) updateData.color = color;
+    if (isActive !== undefined) updateData.isActive = Boolean(isActive);
     
-    // Response tanpa password menggunakan method toSafeJSON
-    res.json(user.toSafeJSON());
+    await service.update(updateData);
+    
+    console.log('Admin: Service updated:', service.toJSON());
+    res.json(service);
   } catch (err) {
-    console.error('Update user error:', err);
+    console.error('Admin update service error:', err);
     
     if (err.name === 'SequelizeValidationError') {
       return res.status(400).json({ 
@@ -181,68 +265,26 @@ router.put('/users/:id', isAuthenticated, async (req, res) => {
       });
     }
     
-    res.status(500).json({ message: 'Gagal update user' });
+    res.status(500).json({ message: 'Gagal update service', error: err.message });
   }
 });
 
-// DELETE - Hapus user
-router.delete('/users/:id', isAuthenticated, async (req, res) => {
+router.delete('/services/:id', isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByPk(id);
+    console.log('Admin: Deleting service ID:', id);
     
-    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
+    const service = await Service.findByPk(id);
     
-    // Proteksi: tidak bisa hapus admin
-    if (user.role === 'admin') {
-      return res.status(403).json({ message: 'Tidak dapat menghapus admin' });
-    }
+    if (!service) return res.status(404).json({ message: 'Service tidak ditemukan' });
     
-    await user.destroy();
-    res.json({ message: 'User berhasil dihapus' });
+    await service.destroy();
+    
+    console.log('Admin: Service deleted successfully');
+    res.json({ message: 'Service berhasil dihapus' });
   } catch (err) {
-    console.error('Delete user error:', err);
-    res.status(500).json({ message: 'Gagal hapus user' });
-  }
-});
-
-// PUT - Update password user (endpoint terpisah untuk keamanan)
-router.put('/users/:id/password', isAuthenticated, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { newPassword } = req.body;
-    
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password baru minimal 6 karakter' });
-    }
-    
-    const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
-    
-    await user.update({ password: newPassword }); // Pastikan di-hash di model
-    
-    res.json({ message: 'Password berhasil diubah' });
-  } catch (err) {
-    console.error('Update password error:', err);
-    res.status(500).json({ message: 'Gagal ubah password' });
-  }
-});
-
-// GET - Statistik users (bonus)
-router.get('/users/stats/summary', isAuthenticated, async (req, res) => {
-  try {
-    const totalUsers = await User.count();
-    const totalAdmins = await User.count({ where: { role: 'admin' } });
-    const totalRegularUsers = await User.count({ where: { role: 'user' } });
-    
-    res.json({
-      total: totalUsers,
-      admins: totalAdmins,
-      users: totalRegularUsers
-    });
-  } catch (err) {
-    console.error('Get user stats error:', err);
-    res.status(500).json({ message: 'Gagal ambil statistik users' });
+    console.error('Admin delete service error:', err);
+    res.status(500).json({ message: 'Gagal hapus service', error: err.message });
   }
 });
 
