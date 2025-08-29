@@ -1,18 +1,29 @@
+// src/components/ProtectedRoute.js
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children, requiredRole = 'admin' }) => {
-  const user = localStorage.getItem('user');
-  
-  if (!user) {
-    return <Navigate to="/login" />;
+  const token = localStorage.getItem('adminToken');
+  const userStr = localStorage.getItem('adminUser');
+
+  // Cek token dan user
+  if (!token || !userStr) {
+    return <Navigate to="/admin/login" replace />;
   }
 
-  const parsedUser = JSON.parse(user);
+  let parsedUser;
+  try {
+    parsedUser = JSON.parse(userStr);
+  } catch (e) {
+    // Jika data user rusak, logout
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    return <Navigate to="/admin/login" replace />;
+  }
 
-  // Cek role
+  // Cek role (opsional, jika backend kirim role)
   if (requiredRole === 'admin' && parsedUser.role !== 'admin') {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

@@ -43,7 +43,7 @@ const LoginPage = () => {
         localStorage.setItem('adminUser', JSON.stringify(result.user));
         
         // ✅ Redirect ke admin dashboard
-        navigate('/admin');
+        navigate('/admin/');
         
       } else {
         setError(result.message || 'Login gagal');

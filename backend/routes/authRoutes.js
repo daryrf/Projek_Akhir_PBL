@@ -2,24 +2,24 @@ const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
 
-// Register
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+// // Register
+// router.post('/register', async (req, res) => {
+//   try {
+//     const { name, email, password } = req.body;
 
-    // Cek user sudah ada
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email sudah terdaftar' });
-    }
+//     // Cek user sudah ada
+//     const existingUser = await User.findOne({ where: { email } });
+//     if (existingUser) {
+//       return res.status(400).json({ message: 'Email sudah terdaftar' });
+//     }
 
-    // Buat user baru
-    const user = await User.create({ name, email, password }); // Nanti dienkripsi
-    res.status(201).json({ message: 'Registrasi berhasil!', user: { id: user.id, name, email } });
-  } catch (err) {
-    res.status(500).json({ message: 'Gagal registrasi' });
-  }
-});
+//     // Buat user baru
+//     const user = await User.create({ name, email, password }); // Nanti dienkripsi
+//     res.status(201).json({ message: 'Registrasi berhasil!', user: { id: user.id, name, email } });
+//   } catch (err) {
+//     res.status(500).json({ message: 'Gagal registrasi' });
+//   }
+// });
 
 // Login
 router.post('/login', async (req, res) => {

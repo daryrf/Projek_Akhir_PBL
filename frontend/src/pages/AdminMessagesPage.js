@@ -85,81 +85,12 @@ const AddForm = React.memo(({ formData, onSubmit, onClose, onChange }) => {
   );
 });
 
-// Komponen Form terpisah untuk Edit
-const EditForm = React.memo(({ formData, onSubmit, onClose, onChange }) => {
-  return (
-    <form onSubmit={onSubmit}>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nama
-        </label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={onChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Email
-        </label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={onChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Pesan
-        </label>
-        <textarea
-          name="message"
-          value={formData.message}
-          onChange={onChange}
-          required
-          rows="4"
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-        >
-          Batal
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Update
-        </button>
-      </div>
-    </form>
-  );
-});
-
 const AdminMessagesPage = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState(null);
   const [addFormData, setAddFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
     message: ''
@@ -260,16 +191,6 @@ const AdminMessagesPage = () => {
     setShowAddModal(true);
   }, []);
 
-  const handleEdit = useCallback((message) => {
-    setEditFormData({
-      name: message.name || '',
-      email: message.email || '',
-      message: message.message || ''
-    });
-    setCurrentMessage(message);
-    setShowEditModal(true);
-  }, []);
-
   const handleCloseAddModal = useCallback(() => {
     setShowAddModal(false);
     setAddFormData({
@@ -279,29 +200,10 @@ const AdminMessagesPage = () => {
     });
   }, []);
 
-  const handleCloseEditModal = useCallback(() => {
-    setShowEditModal(false);
-    setEditFormData({
-      name: '',
-      email: '',
-      message: ''
-    });
-    setCurrentMessage(null);
-  }, []);
-
   // Handler untuk Add Form
   const handleAddFormChange = useCallback((e) => {
     const { name, value } = e.target;
     setAddFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }, []);
-
-  // Handler untuk Edit Form
-  const handleEditFormChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -336,36 +238,6 @@ const AdminMessagesPage = () => {
     }
   }, [addFormData, handleCloseAddModal, fetchMessages]);
 
-  const handleSubmitEdit = useCallback(async (e) => {
-    e.preventDefault();
-    
-    try {
-      const res = await fetch(`http://localhost:5000/api/admin/messages/${currentMessage.id}`, {
-        method: 'PUT',
-        headers: {
-          'x-admin-token': 'admin123',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editFormData)
-      });
-
-      if (res.ok) {
-        const updatedMessage = await res.json();
-        setMessages(prev => prev.map(msg => 
-          msg.id === currentMessage.id ? updatedMessage : msg
-        ));
-        handleCloseEditModal();
-        alert('Pesan berhasil diupdate');
-      } else {
-        const result = await res.json().catch(() => ({ message: 'Gagal update pesan' }));
-        alert(result.message || 'Gagal update pesan');
-      }
-    } catch (err) {
-      console.error('Update error:', err);
-      alert('Gagal terhubung ke server');
-    }
-  }, [editFormData, currentMessage, handleCloseEditModal]);
-
   // Memoize table rows untuk mencegah re-render yang tidak perlu
   const tableRows = useMemo(() => {
     return messages.map((msg) => (
@@ -380,12 +252,6 @@ const AdminMessagesPage = () => {
         </td>
         <td>
           <button
-            onClick={() => handleEdit(msg)}
-            className="text-blue-600 hover:underline text-sm mr-3"
-          >
-            Edit
-          </button>
-          <button
             onClick={() => handleDelete(msg.id)}
             className="text-red-600 hover:underline text-sm"
           >
@@ -394,7 +260,7 @@ const AdminMessagesPage = () => {
         </td>
       </tr>
     ));
-  }, [messages, handleEdit, handleDelete]);
+  }, [messages, handleDelete]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
@@ -452,20 +318,6 @@ const AdminMessagesPage = () => {
           onSubmit={handleSubmitAdd}
           onClose={handleCloseAddModal}
           onChange={handleAddFormChange}
-        />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal 
-        show={showEditModal} 
-        onClose={handleCloseEditModal}
-        title="Edit Pesan"
-      >
-        <EditForm
-          formData={editFormData}
-          onSubmit={handleSubmitEdit}
-          onClose={handleCloseEditModal}
-          onChange={handleEditFormChange}
         />
       </Modal>
     </div>
